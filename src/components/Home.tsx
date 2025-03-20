@@ -89,13 +89,19 @@ export default function XboxHome() {
 
                 <div className="flex items-center text-white">
                     {menuItems.map((menuItem) => (
-                        <div className={`d-flex mt-4 m-2 justify-content-center align-items-center rounded-full ${
-                            selected === menuItem.id ? "border-4 border-blue-500 " : ""
-                        }`} onClick={() => setSelected(menuItem.id)}>
+                        <motion.div
+                            key={menuItem.id}
+                            className={`d-flex mt-4 m-2 justify-content-center align-items-center rounded-full cursor-pointer ${
+                                selected === menuItem.id ? "border-4 border-blue-500 " : ""
+                            }`}
+                            onClick={() => setSelected(menuItem.id)}
+                            whileTap={{scale: 0.95}}
+                        >
                             <div className="circle">
                                 {menuItem.icon}
                             </div>
-                        </div>
+                        </motion.div>
+
                     ))}
                 </div>
 
@@ -108,12 +114,12 @@ export default function XboxHome() {
             </div>
             {/* Game Tiles */}
             <div
-                className="absolute w-full padding-10 bottom-50 left-10 flex justify-bottom items-end space-x-4 overflow-hidden">
+                className="absolute w-full padding-4 bottom-50 left-10 flex items-end space-x-4 overflow-hidden">
                 {games.map((game) => (
                     <motion.div
-                        animate={{width: selected === game.id ? 250 : 125, height: selected === game.id ? 250 : 125}}
+                        animate={{width: selected === game.id ? 200 : 100, height: selected === game.id ? 200 : 100}}
                         key={game.id}
-                        className={`relative rounded-lg overflow-hidden cursor-pointer items-end origin-bottom ${
+                        className={`relative rounded-lg justify-around overflow-hidden cursor-pointer items-end origin-bottom ${
                             selected === game.id ? "border-4 border-blue-500 " : ""
                         }`}
                         onClick={() => setSelected(game.id)}
@@ -132,15 +138,15 @@ export default function XboxHome() {
 
             {/* Feature Tiles */}
             <div
-                className="absolute w-full padding-10 bottom-0 left-10 flex justify-center items-end origin-center space-x-4">
+                className="absolute w-full padding-4 bottom-0 left-10 flex items-end origin-center space-x-4">
                 {features.map((feature) => (
                     <motion.div
                         key={feature.id}
                         animate={{
-                            width: selected === feature.id ? 400 : 350,
-                            height: selected === feature.id ? 200 : 175
+                            width: selected === feature.id ? 300 : 250,
+                            height: selected === feature.id ? 150 : 125
                         }}
-                        className={`relative rounded-lg overflow-hidden cursor-pointer items-center  ${
+                        className={`relative rounded-lg overflow-hidden justify-around cursor-pointer items-center  ${
                             selected === feature.id ? "border-4 border-blue-500 " : ""
                         }`}
                         onClick={() => setSelected(feature.id)}
