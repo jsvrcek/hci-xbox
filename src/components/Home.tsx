@@ -5,11 +5,11 @@ import {Collection, Shop, Ticket, Search, Gear, Headset} from 'react-bootstrap-i
 
 
 const menuItems = [
-    {id: 3, icon: <Collection/>},
-    {id: 4, icon: <Shop/>},
-    {id: 5, icon: <Ticket/>},
-    {id: 6, icon: <Search/>},
-    {id: 7, icon: <Gear/>},
+    {id: 2, icon: <Collection/>},
+    {id: 3, icon: <Shop/>},
+    {id: 4, icon: <Ticket/>},
+    {id: 5, icon: <Search/>},
+    {id: 6, icon: <Gear/>},
 ];
 
 const games = [
@@ -26,13 +26,13 @@ const games = [
 
 const features = [
     {id: 21, name: "Browse the store", img: "/browseStore.png"},
-    {id: 23, name: "Play Avowed Now", img: "/avowedfeat.png"},
-    {id: 26, name: "Test Your Relationship", img: "/relationshipFeat.png"},
-    {id: 29, name: "Play Khazan", img: "/playKhazan.png"},
+    {id: 22, name: "Play Avowed Now", img: "/avowedfeat.png"},
+    {id: 23, name: "Test Your Relationship", img: "/relationshipFeat.png"},
+    {id: 24, name: "Play Khazan", img: "/playKhazan.png"},
 ];
 
 export default function XboxHome() {
-    const [selected, setSelected] = useState<number>();
+    const [selected, setSelected] = useState<number>(1);
     const [time, setTime] = useState(dayjs().format("h:mm A"));
 
     useEffect(() => {
@@ -43,39 +43,46 @@ export default function XboxHome() {
     }, []);
 
     useEffect(() => {
+        if ([7,8,9,10].includes(selected)){
+            setSelected(6)
+        }
+        if ([25,26,27,28,29].includes(selected)){
+            setSelected(24)
+        }
+    }, [selected]);
+
+    useEffect(() => {
         const handleKeyDown = (event) => {
-
-
             switch (event.key) {
                 case "ArrowRight":
-                    setSelected(selected < 9 ? selected + 1 : selected);
+                    setSelected(selected + 1 < 25 ? selected + 1 : selected);
                     break;
                 case "ArrowLeft":
-                    setSelected(selected > 1 ? selected - 1 : selected);
+                    setSelected(selected - 1 > 0 ? selected - 1 : selected);
                     break;
                 case "ArrowDown":
-                    setSelected(selected < 10 ? selected + 10 : selected);
+                    setSelected(selected + 10 < 30 ? selected + 10 : selected);
                     break;
                 case "ArrowUp":
-                    setSelected(selected > 10 ? selected - 10 : selected);
+                    setSelected(selected - 10 > 0 ? selected - 10 : selected);
                     break;
                 default:
                     return;
             }
         };
 
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, []);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [selected]);
 
     return (
         <div className="w-full h-screen">
             {/* Background Image */}
-            <div className="absolute inset-0 bg-cover bg-center"/>
+            {/*<div className="absolute inset-0 bg-cover bg-center"/>*/}
 
             {/* Top Navigation */}
-            <div className="w-full flex">
-                <div className="absolute top-4 left-4 flex items-center text-white"
+            <div className="w-full flex flex-row justify-between pl-6 m-2 pr-6">
+                <div className="flex items-center text-white"
                      onClick={() => setSelected(1)}>
                     <img src="/profile.png" alt="User" className={`w-12 h-12 rounded-full mr-2 ${
                         selected === 1 ? "border-4 border-blue-500 " : ""
@@ -105,19 +112,20 @@ export default function XboxHome() {
                     ))}
                 </div>
 
-                <div className={`absolute top-4 right-4 text-white flex items-center ${
-                    selected === 7 ? "border-4 border-blue-500 " : ""
-                }`}>
+                <div className='top-4 right-4 text-white flex items-center'>
                     <Headset className="m-2"/>
                     {time}
                 </div>
             </div>
             {/* Game Tiles */}
             <div
-                className="absolute w-full padding-4 bottom-50 left-10 flex items-end space-x-4 overflow-hidden">
+                className="absolute w-full padding-4 bottom-50 left-10 flex items-end space-x-8 overflow-hidden">
                 {games.map((game) => (
                     <motion.div
-                        animate={{width: selected === game.id ? 200 : 100, height: selected === game.id ? 200 : 100}}
+                        animate={{
+                            width: selected === game.id ? "calc(100% / 6)" : "calc(100% / 12)",
+                            height: selected === game.id ? "calc(100% / 6)" : "calc(100% / 12)"
+                        }}
                         key={game.id}
                         className={`relative rounded-lg justify-around overflow-hidden cursor-pointer items-end origin-bottom ${
                             selected === game.id ? "border-4 border-blue-500 " : ""
@@ -138,14 +146,18 @@ export default function XboxHome() {
 
             {/* Feature Tiles */}
             <div
-                className="absolute w-full padding-4 bottom-0 left-10 flex items-end origin-center space-x-4">
+                className="absolute w-full padding-4 bottom-0 left-10 flex items-end origin-center space-x-4 overflow-hidden">
                 {features.map((feature) => (
                     <motion.div
                         key={feature.id}
                         animate={{
-                            width: selected === feature.id ? 300 : 250,
-                            height: selected === feature.id ? 150 : 125
+                            width: selected === feature.id ? "calc(100% / 3)" : "calc(80% / 4)",
+                            height: selected === feature.id ? "calc(100% / 3)" : "calc(80% / 4)"
                         }}
+                        // animate={{
+                        //     width: selected === feature.id ? 300 : 250,
+                        //     height: selected === feature.id ? 150 : 125
+                        // }}
                         className={`relative rounded-lg overflow-hidden justify-around cursor-pointer items-center  ${
                             selected === feature.id ? "border-4 border-blue-500 " : ""
                         }`}
