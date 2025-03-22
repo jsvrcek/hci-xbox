@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import home from './slices/home.ts';
 import selection from './slices/selection.ts';
+import search from "./slices/search.ts";
 
 
 const saveState = (state: any) => {
@@ -27,8 +28,9 @@ const preloadedState = loadState();
 
 const store = configureStore({
   reducer: {
+    home,
+    search,
     selection,
-    home
   },
   preloadedState
 })

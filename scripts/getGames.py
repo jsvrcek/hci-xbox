@@ -4,11 +4,11 @@ import time
 
 import requests
 from bs4 import BeautifulSoup
-
+output_file = "src/xbox_games2.json"
 print(os.getcwd())
 previous = set()
 try:
-    with open("src/xbox_games.json", 'r') as open_file:
+    with open(output_file, 'r') as open_file:
         games = json.load(open_file)
         for game in games:
             previous.add(game['title'])
@@ -32,7 +32,6 @@ def get_game_description_and_image(game_url, image_folder='public/images'):
         next_paragraph = infobox.find_next('p')
         if next_paragraph:
             description = next_paragraph.get_text()
-            print(description[0:40])
         else:
             print("No <p> found after infobox.")
     else:
@@ -56,7 +55,7 @@ def get_game_description_and_image(game_url, image_folder='public/images'):
                 f.write(img_response.content)
             image_size = os.path.getsize(image_path)
             print(f"Image written to {image_path} with size {image_size}")
-            if image_size < 5120:
+            if image_size < 10000:
                 retries -= 1
                 print("Image too small. Retrying.")
             else:
@@ -74,6 +73,8 @@ def rate_limited_request(url):
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,image/jpeg, image/png, image/*;q=0.8, */*;q=0.5"
     }
     wait_time = 2 * (2 ** (max_retries - retries))
+    # Sleep upfront.
+    time.sleep(wait_time)
     while retries:
         try:
             print(f"Fetching url: {url}")
@@ -105,7 +106,8 @@ def scrape_xbox_games():
             game_title = title_row.get_text(strip=True)
             if game_title in previous:
                 continue
-            print(game_title)
+            category = row.find_all('td')[0].get_text(strip=True)
+            print(f"{game_title}: {category}")
             game_link = title_row.find('a')  # Check if the title is a link
 
             if game_link:
@@ -118,6 +120,7 @@ def scrape_xbox_games():
 
             games.append({
                 'title': game_title,
+                'category': category,
                 'description': description,
                 'image_path': image_path
             })
@@ -126,7 +129,7 @@ def scrape_xbox_games():
 
 
 # Function to save the data to a JSON file
-def save_to_json(data, filename='src/xbox_games.json'):
+def save_to_json(data, filename=output_file):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 

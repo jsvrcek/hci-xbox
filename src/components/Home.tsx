@@ -24,12 +24,14 @@ export default function XboxHome() {
     const navigate = useNavigate();
 
     const menuItems: Selectable[] = [
-        {id: "menu-collection", index: 2, icon: <Collection/>},
-        {id: "menu-shop", index: 3, icon: <Shop/>},
-        {id: "menu-ticket", index: 4, icon: <Ticket/>},
-        {id: "menu-search", index: 5, icon: <Search/>, onClick: navigate("/games")},
-        {id: "menu-gear", index: 6, icon: <Gear/>}
+        {id: "menu-collection", index: 2, icon: <Collection/>, onClick: () => dispatch(setSelected("menu-collection"))},
+        {id: "menu-shop", index: 3, icon: <Shop/>, onClick: () => dispatch(setSelected("menu-shop"))},
+        {id: "menu-ticket", index: 4, icon: <Ticket/>, onClick: () => dispatch(setSelected("menu-ticket"))},
+        {id: "menu-search", index: 5, icon: <Search/>, onClick: () => navigate("/search")},
+        {id: "menu-gear", index: 6, icon: <Gear/>, onClick: () => dispatch(setSelected("menu-gear"))}
     ].map(m => ({...m, key: m.id}))
+
+
     useEffect(() => {
         const interval = setInterval(() => {
             setTime(dayjs().format("h:mm A"));
@@ -162,7 +164,7 @@ export default function XboxHome() {
                             className={`d-flex mt-4 m-2 justify-content-center align-items-center rounded-full cursor-pointer ${
                                 selected === menuItem.id ? "border-4 border-blue-500 " : ""
                             }`}
-                            onClick={() => menuItems['onClick']?.() || () => dispatch(setSelected(menuItem.id))}
+                            onClick={menuItem['onClick']}
                             whileTap={{scale: 0.95}}
                         >
                             <div className="circle">

@@ -15,4 +15,5 @@ export interface Feature extends Selectable {
 export interface Game extends Feature{
     pin?: boolean
     store?: boolean
+    category: string
 }
