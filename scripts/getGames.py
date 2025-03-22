@@ -1,8 +1,9 @@
-import requests
-from bs4 import BeautifulSoup
 import json
 import os
 import time
+
+import requests
+from bs4 import BeautifulSoup
 
 print(os.getcwd())
 previous = set()
@@ -30,7 +31,7 @@ def get_game_description_and_image(game_url, image_folder='public/images'):
         # Get the next <p> tag immediately after the infobox table
         next_paragraph = infobox.find_next('p')
         if next_paragraph:
-            description = next_paragraph.get_text(strip=True)
+            description = next_paragraph.get_text()
             print(description[0:40])
         else:
             print("No <p> found after infobox.")
@@ -44,30 +45,45 @@ def get_game_description_and_image(game_url, image_folder='public/images'):
         img_tag = info_table.find('img')
         if img_tag and img_tag.get('src'):
             image_url = "https:" + img_tag['src']
-
     image_path = None
     if image_url:
-        # Download the image
-        img_response = rate_limited_request(image_url)
-        image_filename = os.path.join(image_folder, os.path.basename(image_url))
-        with open(image_filename, 'wb') as f:
-            f.write(img_response.content)
-        image_path = image_filename
-
+        retries = 3
+        while retries:
+            # Download the image
+            img_response = rate_limited_request(image_url)
+            image_path = os.path.join(image_folder, os.path.basename(image_url))
+            with open(image_path, 'wb') as f:
+                f.write(img_response.content)
+            image_size = os.path.getsize(image_path)
+            print(f"Image written to {image_path} with size {image_size}")
+            if image_size < 5120:
+                retries -= 1
+                print("Image too small. Retrying.")
+            else:
+                return description, image_path
     return description, image_path
 
 
 # Don't spam wikipedia.
 def rate_limited_request(url):
-    retries = 3
+    retries = max_retries = 5
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://en.wikipedia.org/",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,image/jpeg, image/png, image/*;q=0.8, */*;q=0.5"
+    }
+    wait_time = 2 * (2 ** (max_retries - retries))
     while retries:
         try:
-            time.sleep(2)
-            print(url)
-            return requests.get(url)
+            print(f"Fetching url: {url}")
+            return requests.get(url, headers=headers)
         except Exception as e:
             print(f"Failed to make request {url}:  {e}")
             retries -= 1
+            if retries:
+                print(f"Waiting {wait_time} seconds before retrying...")
+                time.sleep(wait_time)
 
 # Main function to scrape the list of games
 def scrape_xbox_games():

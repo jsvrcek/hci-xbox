@@ -8,11 +8,11 @@ import {type RootState} from "../redux/store.ts";
 export default function GameRow() {
     const dispatch = useDispatch();
     const selectedId = useSelector((state: RootState) => state.selection.selected);
-        const {games} = useSelector((state: RootState) => state.home);
+    const {games} = useSelector((state: RootState) => state.home);
 
 
-    return <div key="game-row-div"
-        className="absolute w-full padding-4 bottom-50 left-10 flex items-end space-x-8 overflow-hidden">
+    return <div data-testid="game-row"
+                className="absolute w-full padding-4 bottom-50 left-10 flex items-end space-x-8 overflow-hidden">
         {games.map((game) => (
             <motion.div
                 animate={{
@@ -26,14 +26,17 @@ export default function GameRow() {
                 onClick={() => dispatch(setSelected(game.id))}
                 whileTap={{scale: 0.95}}
             >
-                <img key={game.name} src={game.image} alt={game.name} className="w-full h-full object-cover"/>
+                <div className="relative w-full pb-[100%]">
+                    <img key={game.name} src={game.image_path} alt={game.name}
+                         className="absolute top-0 left-0 w-full h-full object-cover object-top"/>
+                </div>
                 <div key={`${game.name}-pin`} className={`absolute bottom-2 right-2 ${!game.pin && 'hidden'}`}>
                     <PinFill/>
                 </div>
                 <div key={`${game.name}-name`}
-                    className={`absolute bottom-2 left-2 text-white bg-black bg-opacity-50 px-2 py-1 rounded text-center ${
-                        selectedId === game.id || "hidden"
-                    }`}>
+                     className={`absolute bottom-2 left-2 text-white bg-black bg-opacity-50 px-2 py-1 rounded text-center ${
+                         selectedId === game.id || "hidden"
+                     }`}>
                     {game.name}
                 </div>
             </motion.div>

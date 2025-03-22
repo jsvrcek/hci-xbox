@@ -9,23 +9,27 @@ import {useDispatch, useSelector} from "react-redux";
 import FeaturedRow from "./FeaturedRow.tsx";
 import GameRow from "./GameRow.tsx";
 import {setSelected} from "../redux/slices/selection.ts";
+import {setGames} from "../redux/slices/home.ts";
+import {useNavigate} from "react-router";
 
-const menuItems: Selectable[] = [
-    {id: "menu-collection", index: 2, icon: <Collection/>},
-    {id: "menu-shop", index: 3, icon: <Shop/>},
-    {id: "menu-ticket", index: 4, icon: <Ticket/>},
-    {id: "menu-search", index: 5, icon: <Search/>},
-    {id: "menu-gear", index: 6, icon: <Gear/>}
-].map(m => ({...m, key: m.id}))
 
 let gamepad = null;
 
 export default function XboxHome() {
     const dispatch = useDispatch();
-    const {games, featured} = useSelector((state: RootState) => state.home);
+    const {games} = useSelector((state: RootState) => state.home);
     const {selected} = useSelector((state: RootState) => state.selection);
     const [time, setTime] = useState(dayjs().format("h:mm A"));
     const [isMenuOpen, setMenuOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const menuItems: Selectable[] = [
+        {id: "menu-collection", index: 2, icon: <Collection/>},
+        {id: "menu-shop", index: 3, icon: <Shop/>},
+        {id: "menu-ticket", index: 4, icon: <Ticket/>},
+        {id: "menu-search", index: 5, icon: <Search/>, onClick: navigate("/games")},
+        {id: "menu-gear", index: 6, icon: <Gear/>}
+    ].map(m => ({...m, key: m.id}))
     useEffect(() => {
         const interval = setInterval(() => {
             setTime(dayjs().format("h:mm A"));
@@ -98,7 +102,7 @@ export default function XboxHome() {
     function pinGame() {
         const game = getSelectedGame();
         if (game) {
-            game['pin'] = !game['pin'];
+            dispatch(setGames([{...game, pin: !game['pin']}, ...games.filter(g => g.id !== game.id)]))
         }
         setMenuOpen(false);
     }
@@ -158,7 +162,7 @@ export default function XboxHome() {
                             className={`d-flex mt-4 m-2 justify-content-center align-items-center rounded-full cursor-pointer ${
                                 selected === menuItem.id ? "border-4 border-blue-500 " : ""
                             }`}
-                            onClick={() => setSelected(menuItem.id)}
+                            onClick={() => menuItems['onClick']?.() || () => dispatch(setSelected(menuItem.id))}
                             whileTap={{scale: 0.95}}
                         >
                             <div className="circle">
@@ -174,8 +178,9 @@ export default function XboxHome() {
                     {time}
                 </div>
             </div>
-            <GameRow games={games}/>
-            <FeaturedRow features={featured}/>
+
+            <GameRow/>
+            <FeaturedRow/>
 
             <div className="flex justify-center items-center h-screen">
                 <Menu isOpen={isMenuOpen} onClose={() => setMenuOpen(false)} pin={(pinGame)}

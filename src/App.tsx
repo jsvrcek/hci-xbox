@@ -1,14 +1,18 @@
 import './App.css'
 import Home from './components/Home.tsx'
-import store from "./redux/store.ts";
-import {Provider} from "react-redux";
+import {BrowserRouter as Router, Routes, Route} from "react-router";
+import SearchPage from "./components/Search.tsx";
 
 function App() {
     return (
-        <Provider store={store}>
-            <Home/>
-        </Provider>
-    )
+        <Router>
+            <Routes>
+
+                <Route index element={<Home/>}/>
+                <Route path="search" element={<SearchPage/>}/>
+            </Routes>
+        </Router>
+    );
 }
 
 export default App

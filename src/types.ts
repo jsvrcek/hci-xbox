@@ -9,7 +9,7 @@ export interface Selectable{
 export interface Feature extends Selectable {
     name: string
     description?: string
-    image?: string
+    image_path?: string
 }
 
 export interface Game extends Feature{

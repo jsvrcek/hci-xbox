@@ -14,6 +14,7 @@ const saveState = (state: any) => {
 // Function to load state from sessionStorage
 const loadState = () => {
   try {
+    return undefined;
     const serializedState = sessionStorage.getItem('reduxState');
     return serializedState ? JSON.parse(serializedState) : undefined;
   } catch (err) {
