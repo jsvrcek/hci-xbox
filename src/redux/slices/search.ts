@@ -18,8 +18,9 @@ let defaultGames: Game[] = random.map((r) => {
     }
 }) as Game[];
 
-const initialState: { games: Game[] } = {
-    games: defaultGames
+const initialState: { games: Game[], text: string } = {
+    games: defaultGames,
+    text: "",
 };
 
 
@@ -30,18 +31,21 @@ const searchSlice = createSlice({
     reducers: {
         setSearchResults: (state, action) => {
             const counts = defaultCounts();
-            return action?.payload?.slice(0, 20).map((g) => ({
+            state.games =  action?.payload?.slice(0, 20).map((g) => ({
                 ...g,
                 index: inc(counts),
                 name: g?.title,
                 id: `game-${g?.title}`
             })) || [];
         },
+        setSearchText: (state, action) => {
+            state.text = action?.payload || ""
+        },
     },
 });
 
 // Export the action to set the selected game
-export const {setSearchResults} = searchSlice.actions;
+export const {setSearchResults, setSearchText} = searchSlice.actions;
 
 // Export the reducer to be added to the store
 export default searchSlice.reducer;

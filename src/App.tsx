@@ -2,7 +2,6 @@ import './App.css'
 import Home from './components/Home.tsx'
 import {BrowserRouter as Router, Routes, Route} from "react-router";
 import SearchPage from "./components/Search.tsx";
-import {useGlobalKeyPress} from "./hooks/keys.ts";
 
 function App() {
 

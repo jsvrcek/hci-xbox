@@ -8,7 +8,7 @@ import type {RootState} from "../redux/store.ts";
 import {useDispatch, useSelector} from "react-redux";
 import FeaturedRow from "./FeaturedRow.tsx";
 import GameRow from "./GameRow.tsx";
-import {setEntered, setSelected} from "../redux/slices/selection.ts";
+import {setEntered, setMenu, setSelected} from "../redux/slices/selection.ts";
 import {setGames} from "../redux/slices/home.ts";
 import {useNavigate} from "react-router";
 import {useGlobalKeyPress} from "../hooks/keys.ts";
@@ -17,7 +17,7 @@ import {useGlobalKeyPress} from "../hooks/keys.ts";
 export default function XboxHome() {
     const dispatch = useDispatch();
     const {games, featured} = useSelector((state: RootState) => state.home);
-    const {selected, entered} = useSelector((state: RootState) => state.selection);
+    const {selected, entered, menu} = useSelector((state: RootState) => state.selection);
     const [time, setTime] = useState(dayjs().format("h:mm A"));
     const [isMenuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -39,13 +39,23 @@ export default function XboxHome() {
     }, []);
 
     useEffect(() => {
-        if(entered){
-            if(selected=="home-search"){
+        if (entered) {
+            if (selected === "menu-search") {
                 navigate("/search")
             }
         }
-        dispatch(setEntered(null));
     }, [entered]);
+
+    useEffect(() => {
+        if (menu) {
+            if (selected?.includes('game-')) {
+                setMenuOpen(true);
+                setMenu(1);
+            }
+        } else {
+            setEntered(null);
+        }
+    }, [menu]);
 
 
     function pinGame() {
@@ -54,21 +64,35 @@ export default function XboxHome() {
             dispatch(setGames([{...game, pin: !game['pin']}, ...games.filter(g => g.id !== game.id)]))
         }
         setMenuOpen(false);
+        dispatch(setMenu(0));
+        dispatch(setEntered(0));
     }
 
     const getSelectedGame = () => games.find(g => g.id === selected);
 
     const navigables = [{index: 1, id: "home-profile"}, ...menuItems, ...games, ...featured]
-    const setSelectedByIndex = (idx) => dispatch(setSelected(navigables.find(n =>n.index === idx)?.id));
-    const getSelectedIndex = () => navigables.find(n =>n.id === selected)?.index
+    const setSelectedByIndex = (idx) => {
+        if (!!idx) {
+            console.log(`Selecting Index: ${idx}`)
+            dispatch(setSelected(navigables.find(n => n.index === idx)?.id));
+        }
+    }
+    const getSelectedIndex = () => {
+        console.log(`selected: ${selected}`)
+        if(selected) {
+            const found = navigables.find(n => n.id === selected)?.index
+            console.log(`Returning found ${found}`)
+            return found
+        }
+    }
     useGlobalKeyPress(getSelectedIndex, setSelectedByIndex);
 
     useEffect(() => {
         if ([7, 8, 9, 10].includes(selected)) {
-            dispatch(setSelectedByIndex(6))
+            setSelectedByIndex(6)
         }
         if ([25, 26, 27, 28, 29].includes(selected)) {
-            dispatch(setSelectedByIndex(24))
+            setSelectedByIndex(24)
         }
     }, [setSelectedByIndex]);
 
@@ -93,7 +117,7 @@ export default function XboxHome() {
                 <div className="flex items-center text-white">
                     {menuItems.map((menuItem) => (
                         <motion.div
-                            animate={{ scale: entered == menuItem.index ? 0.95 : 1 }}
+                            animate={{scale: entered == menuItem.index ? 0.95 : 1}}
                             key={menuItem.id}
                             className={`d-flex mt-4 m-2 justify-content-center align-items-center rounded-full cursor-pointer ${
                                 selected === menuItem.id ? "border-4 border-blue-500 " : ""
@@ -119,8 +143,8 @@ export default function XboxHome() {
             <FeaturedRow/>
 
             <div className="flex justify-center items-center h-screen">
-                <Menu isOpen={isMenuOpen} onClose={() => setMenuOpen(false)} pin={(pinGame)}
-                      isPinned={getSelectedGame()?.['pin']}/>
+                <Menu isOpen={isMenuOpen} title={getSelectedGame()?.name} selectedIndex={menu} pin={(pinGame)}
+                      isPinned={getSelectedGame()?.['pin']} click={entered}/>
             </div>
         </div>
     );

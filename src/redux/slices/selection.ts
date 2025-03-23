@@ -3,10 +3,10 @@ import { createSlice } from '@reduxjs/toolkit';
 import {Selectable} from '../../types.ts'
 
 // Initial state for the selected game
-const initialState: {selected: Selectable | null, menu: number, entered: number} = {
+const initialState: {selected: string | null, menu: number, entered: boolean} = {
   selected: null,
   menu: 0,
-  entered: 0,
+  entered: false,
 };
 
 // Create a slice to handle game selection
@@ -18,6 +18,7 @@ const selectionSlice = createSlice({
       if(!action.payload){
         return;
       }
+      console.log(`Selected: ${action.payload}`);
       state.selected = action.payload;
     },
     setMenu: (state, action) => {

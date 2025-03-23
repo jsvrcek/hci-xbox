@@ -1,98 +1,98 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {MicFill} from "react-bootstrap-icons";
 import {LoadingSpinner} from "./LoadingSpinner.tsx";
 import {transcribeAudio} from "../utils/transcribeAudio.ts";
+import {setSearchText} from "../redux/slices/search.ts";
+import {useDispatch, useSelector} from "react-redux";
+import {setEntered, setSelected} from "../redux/slices/selection.ts";
+import type {RootState} from "../redux/store.ts";
 
 
 interface ChildProps {
     isLoading: boolean;
-    setIsLoading: (boolean) => void;
-    selected: boolean;
+    record: boolean;
 }
 
-export const MicButton: React.FC<ChildProps> = ({isLoading, setIsLoading, selected}) => {
-    const [isRecording, setIsRecording] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-    const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+export const MicButton: React.FC<ChildProps> = ({isLoading, record}) => {
+
+    const dispatch = useDispatch();
+    const mediaRecorder = useRef<MediaRecorder | null>(null);
+    const audioChunks = useRef<Blob[]>([]);
+    const [recording, setRecording] = useState(false);
+    const {entered} = useSelector((state: RootState) => state.selection);
+
 
     useEffect(() => {
-        let recorder: MediaRecorder | null = null;
-        let audioStream: MediaStream | null = null;
+        if (recording) {
+            void stopRecording();
+            setRecording(false);
+        } else if (entered) {
+            void startRecording();
+            setRecording(true);
+        }
+        dispatch(setEntered(false));
+    }, [record]);
 
-        const initRecording = async () => {
-            try {
-                // Request access to microphone
-                audioStream = await navigator.mediaDevices.getUserMedia({audio: true});
-                recorder = new MediaRecorder(audioStream);
+    async function transcribeAudio(audioBlob) {
+        const formData = new FormData();
+        const file = new File([audioBlob], "audio.webm", {type: "audio/webm"});
+        console.log("Uploading File:", file.name, file.type); // Debugging
+        formData.append("file", file);
 
-                recorder.ondataavailable = (event) => {
-                    setAudioChunks((prevChunks) => [...prevChunks, event.data]);
-                };
+        // Sending the audio to the server for transcription
+        const response = await fetch('http://localhost:3000/api/transcribe', {
+            method: 'POST',
+            body: formData,
+        });
 
-                recorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, {type: 'audio/wav'});
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    console.log('Audio URL:', audioUrl);
+        const data = await response.json();
+        console.log('Transcription result:', data.transcription);
+        return data.transcription;
+    }
 
-                    // You can now send audioBlob or audioUrl to an API for transcription, etc.
-                };
+    // Start recording
+    const startRecording = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm")
+            ? "audio/webm"
+            : "audio/mp4";
+        const recorder = new MediaRecorder(stream, {mimeType});
 
-                setMediaRecorder(recorder);
-            } catch (err) {
-                console.error('Error accessing microphone:', err);
+        recorder.ondataavailable = (event) => {
+            audioChunks.current.push(event.data);
+        };
+
+        recorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks.current, {type: mimeType});
+            audioChunks.current = [];
+
+            // Send to OpenAI API
+            const result = await transcribeAudio(audioBlob);
+            if (result) {
+                dispatch(setSearchText(result));
             }
         };
 
-        if (isRecording && !mediaRecorder) {
-            initRecording();
-        }
-
-        return () => {
-            // Cleanup
-            if (audioStream) {
-                audioStream.getTracks().forEach((track) => track.stop());
-            }
-        };
-    }, [isRecording, mediaRecorder, audioChunks]);
-
-    const startRecording = () => {
-        if(isLoading){
-            return
-        }
-        if (mediaRecorder) {
-            mediaRecorder.start();
-            setAudioChunks([]); // Clear previous audio chunks
-        }
-        setIsRecording(true);
+        recorder.start();
+        mediaRecorder.current = recorder;
+        setRecording(true);
     };
 
-    const stopRecording = async () => {
-        if (mediaRecorder) {
-            mediaRecorder.stop();
-        }
-        setIsRecording(false);
-        setIsLoading(true);
-        const audioBlob = new Blob(audioChunks, {type: 'audio/wav'});
-
-        try {
-            const transcription = transcribeAudio(audioBlob)
-            setIsLoading(false);
-            return transcription;
-        } catch (error) {
-            console.error('Error submitting audio:', error);
-        }
+    // Stop recording
+    const stopRecording = () => {
+        mediaRecorder.current?.stop();
+        setRecording(false);
     };
 
     return (
-        <div>
-            <button
-                onClick={isRecording ? stopRecording : startRecording}
-                className="rounded-full flex items-center justify-center"
-            >
-                {isLoading ? <div className="h-6 w-6"><LoadingSpinner/></div> :
-                    <MicFill className={`h-6 w-6 ${isRecording ? "text-red-400" : "text-gray-300"} ${selected === 'back' && "border-4 border-blue-500"}`}/>}
-            </button>
-        </div>
+        <button
+            onClick={recording ? stopRecording : startRecording}
+            className="rounded-full flex items-center justify-center align-center"
+        >
+            {isLoading ? <LoadingSpinner/> :
+                <MicFill
+                    className={`h-6 w-6 ${recording ? "text-red-400" : "text-gray-300"} text-center align-center items-center justify-center text-center`}/>}
+        </button>
     );
 };
 

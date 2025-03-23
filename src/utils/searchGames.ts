@@ -2,6 +2,7 @@ import {OpenAI} from "openai";
 import games_list from "../xbox_games.json" with {type: "json"};
 import type {Game} from "../types.ts";
 import fs from "node:fs";
+import {getUniqueRandomIntegers} from "./random.ts";
 
 export const groupedByCategory = games_list.reduce((acc, item) => {
     // If the category doesn't exist in the accumulator, create it as an array
@@ -82,7 +83,9 @@ export async function searchGames(query: string, gameOptions: Game[]): Promise<G
     you might return Madden Football, MLB.  If they ask for first person shooters you would return something like Call of Duty. 
     If they ask for kids games you might return Disney Dreamlight. 
   `;
-
+    const random = getUniqueRandomIntegers(0, games_list?.length <100 ? games_list?.length: 50, 9)
+    const games = random.map(i => gameOptions[i])
+    console.log("asking about these games:", games)
     try {
         console.log("SEARCHING GAMES")
         const response = await openai.chat.completions.create({
@@ -103,7 +106,7 @@ export async function searchGames(query: string, gameOptions: Game[]): Promise<G
                                 type: "array",
                                 items: {
                                     type: "string",
-                                    enum: gameOptions
+                                    enum: games
                                 },
                             },
                         },
@@ -128,9 +131,15 @@ export async function searchGames(query: string, gameOptions: Game[]): Promise<G
 }
 
 export async function uploadAudio(audioPath) {
-    const transcription = await openai.audio.transcriptions.create({
-        model: 'whisper-1',
-        file: fs.createReadStream(audioPath),
-    });
-    return {transcription: transcription.text}
+    try {
+        console.log("uploading audio", audioPath);
+        const response = await openai.audio.transcriptions.create({
+            file: fs.createReadStream(audioPath),
+            model: "whisper-1",
+            response_format: "text",
+        });
+        return {transcription: response}
+    } catch (error) {
+        console.error("Transcription error:", error);
+    }
 }

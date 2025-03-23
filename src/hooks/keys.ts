@@ -9,7 +9,6 @@ import {debounce} from 'lodash-es';
 export function useGlobalKeyPress(getSelected, setSelected) {
     const dispatch = useDispatch();
     const {menu} = useSelector((state: RootState) => state.selection);
-    // const [pressedButtons, pressedButtons = useState(new Set());
     let pressedButtons = new Set();
 
     useEffect(() => {
@@ -28,27 +27,47 @@ export function useGlobalKeyPress(getSelected, setSelected) {
 
     function actionForArrowLeft() {
         console.log("Action for Left Arrow (D-pad Left)");
-        setSelected(getSelected() - 1 > 0 ? getSelected() - 1 : getSelected());
+        if (!menu) {
+            setSelected(getSelected() - 1 > 0 ? getSelected() - 1 : getSelected());
+        }
     }
 
     function actionForArrowRight() {
         console.log("Action for Right Arrow (D-pad Right)");
-        setSelected(getSelected() + 1);
+        if (!menu) {
+            setSelected(getSelected() + 1);
+        }
     }
 
     function actionForArrowUp() {
-        console.log("Action for Up Arrow (D-pad Up)");
-        setSelected(getSelected() - 10 > 0 ? getSelected() - 10 : getSelected());
+        if (menu) {
+            console.log("Action for Up Arrow (D-pad Up) in menu");
+            if (menu > 1) {
+                dispatch(setMenu(menu - 1));
+            }
+        } else {
+            console.log("Action for Up Arrow (D-pad Up) in page");
+            setSelected(getSelected() - 10 > 0 ? getSelected() - 10 : getSelected());
+        }
     }
 
     function actionForArrowDown() {
-        console.log("Action for Down Arrow (D-pad Down)");
-        setSelected(getSelected() + 10);
+        if (menu) {
+            console.log("Action for Down Arrow (D-pad Down) in menu");
+            if (menu < 7) {
+                dispatch(setMenu(menu + 1))
+            }
+        } else {
+            console.log("Action for Down Arrow (D-pad Down) on page");
+            setSelected(getSelected() + 10);
+        }
     }
 
     function actionForKeyA() {
         console.log("Action for Button A");
-        dispatch(setEntered(getSelected()));
+        if(getSelected()) {
+            dispatch(setEntered(true));
+        }
     }
 
     function actionForKeyB() {
@@ -74,26 +93,23 @@ export function useGlobalKeyPress(getSelected, setSelected) {
         console.log("Action for Back Button");
     }
 
-    function actionForAlt() {
-        console.log("Action for Alt (Menu) Button");
-        dispatch(setMenu(getSelected()));
+    function actionForCtrl() {
+        console.log("Action for Ctrl (Menu) Button");
+        dispatch(setMenu(1));
     }
 
-// Gamepad button mappings (buttons 0-13 as examples)
-    const keyToGamepad = {
-        "ArrowUp": 12,    // D-pad up
-        "ArrowDown": 13,  // D-pad down
-        "ArrowLeft": 14,  // D-pad left
-        "ArrowRight": 15, // D-pad right
-        "Enter": 0,        // Button A
-        "Esc": 1,        // Button B
-        "KeyX": 2,        // Button X
-        "KeyY": 3,        // Button Y
-        "Shift": 8,       // Back button
-        "Alt": 9,         // Menu
+    const gamepadToKey = {
+        12: "ArrowUp",    // D-pad up
+        13: "ArrowDown",  // D-pad down
+        14: "ArrowLeft",  // D-pad left
+        15: "ArrowRight", // D-pad right
+        0: "Enter",        // Button A
+        1: "Esc",        // Button B
+        2: "KeyX",        // Button X
+        3: "KeyY",        // Button Y
+        8: "Shift",       // Back button
+        9: "Control",         // Menu
     };
-
-    const gamepadToKey = Object.fromEntries(Object.entries(keyToGamepad).map(([k, v]) => [v, k]));
 
 
 // Function to perform the action based on key/button press
@@ -132,8 +148,8 @@ export function useGlobalKeyPress(getSelected, setSelected) {
             case "Shift":
                 actionForShift();
                 break;
-            case "Alt":
-                actionForAlt();
+            case "Control":
+                actionForCtrl();
                 break;
             default:
                 console.log(`${action} triggered!`);
@@ -149,8 +165,14 @@ export function useGlobalKeyPress(getSelected, setSelected) {
                 if (gamepad.buttons[buttonIndex].pressed) {
                     if (!pressedButtons.has(buttonIndex)) {
                         pressedButtons.add(buttonIndex);
-                        console.log(`Button ${buttonIndex} pressed`);
-                        performAction(key);
+                        console.log(`Button ${buttonIndex} pressed (${key})`);
+
+                        window.dispatchEvent(new KeyboardEvent("keydown", {
+                            key: key, // The key pressed
+                            code: key,
+                            bubbles: true // Ensures it propagates up the DOM
+                        }));
+                        // performAction(key);
                     }
                 } else {
                     pressedButtons.delete(buttonIndex);
