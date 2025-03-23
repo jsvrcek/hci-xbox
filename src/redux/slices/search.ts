@@ -33,8 +33,8 @@ const searchSlice = createSlice({
             return action?.payload?.slice(0, 20).map((g) => ({
                 ...g,
                 index: inc(counts),
-                name: g.title,
-                id: `game-${g.title}`
+                name: g?.title,
+                id: `game-${g?.title}`
             })) || [];
         },
     },

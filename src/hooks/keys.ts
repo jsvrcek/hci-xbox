@@ -4,21 +4,27 @@ import {useEffect} from "react";
 import {setEntered, setMenu} from "../redux/slices/selection.ts";
 import {useDispatch, useSelector} from "react-redux";
 import type {RootState} from "../redux/store.ts";
+import {debounce} from 'lodash-es';
 
 export function useGlobalKeyPress(getSelected, setSelected) {
     const dispatch = useDispatch();
     const {menu} = useSelector((state: RootState) => state.selection);
+    // const [pressedButtons, pressedButtons = useState(new Set());
+    let pressedButtons = new Set();
 
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent) => {
             keyPressHandler(event);
         };
+        window.addEventListener("gamepadconnected", (event) => {
+            console.log("Gamepad connected:", event.gamepad);
+            checkGamepad(); // Start checking inputs
+        });
         window.addEventListener("keydown", handleKeyPress);
-        checkGamepad();
         return () => {
             window.removeEventListener("keydown", handleKeyPress);
         };
-    }, [checkGamepad]);
+    }, [checkGamepad, keyPressHandler]);
 
     function actionForArrowLeft() {
         console.log("Action for Left Arrow (D-pad Left)");
@@ -47,7 +53,7 @@ export function useGlobalKeyPress(getSelected, setSelected) {
 
     function actionForKeyB() {
         console.log("Action for Button B");
-        if(menu){
+        if (menu) {
             dispatch(setMenu(0));
         }
     }
@@ -74,22 +80,24 @@ export function useGlobalKeyPress(getSelected, setSelected) {
     }
 
 // Gamepad button mappings (buttons 0-13 as examples)
-    const gamepadButtonMappings = {
-        "ArrowLeft": 11,  // D-pad left
-        "ArrowRight": 12, // D-pad right
-        "ArrowUp": 10,    // D-pad up
+    const keyToGamepad = {
+        "ArrowUp": 12,    // D-pad up
         "ArrowDown": 13,  // D-pad down
+        "ArrowLeft": 14,  // D-pad left
+        "ArrowRight": 15, // D-pad right
         "Enter": 0,        // Button A
         "Esc": 1,        // Button B
         "KeyX": 2,        // Button X
         "KeyY": 3,        // Button Y
-        "Shift": 6,       // Back button
-        "Alt": 7,         // Menu
-
+        "Shift": 8,       // Back button
+        "Alt": 9,         // Menu
     };
 
+    const gamepadToKey = Object.fromEntries(Object.entries(keyToGamepad).map(([k, v]) => [v, k]));
+
+
 // Function to perform the action based on key/button press
-    function performAction(action) {
+    const performAction = debounce((action) => {
         switch (action) {
             case "ArrowLeft":
                 actionForArrowLeft();
@@ -130,33 +138,32 @@ export function useGlobalKeyPress(getSelected, setSelected) {
             default:
                 console.log(`${action} triggered!`);
         }
-    }
+    }, 100);
 
-// Function to check and perform the action based on gamepad input
+    // Function to check and perform the action based on gamepad input
     function checkGamepad() {
-        const gamepads = navigator.getGamepads();
-        if (gamepads[0]) {
-            const gamepad = gamepads[0];
-
-            // Check if any mapped gamepad button is pressed
-            for (const key in gamepadButtonMappings) {
-                const buttonIndex = gamepadButtonMappings[key];
-                if (gamepad.buttons[buttonIndex] && gamepad.buttons[buttonIndex].pressed) {
-                    performAction(key); // Perform action for the corresponding key/button
+        const gamepad = navigator.getGamepads()?.find(g => g?.buttons?.length > 1);
+        if (gamepad) {
+            for (const [buttonIndex, key] of Object.entries(gamepadToKey)) {
+                // gamepad.buttons.forEach((button, buttonIndex) => {
+                if (gamepad.buttons[buttonIndex].pressed) {
+                    if (!pressedButtons.has(buttonIndex)) {
+                        pressedButtons.add(buttonIndex);
+                        console.log(`Button ${buttonIndex} pressed`);
+                        performAction(key);
+                    }
+                } else {
+                    pressedButtons.delete(buttonIndex);
                 }
             }
         }
+
+
         requestAnimationFrame(checkGamepad); // Keep polling
     }
 
-// Key press handler
     function keyPressHandler(event) {
-        const key = event.key; // Get the pressed key
-
-        // If the key corresponds to a mapped gamepad button
-        if (gamepadButtonMappings[key] !== undefined) {
-            performAction(key); // Perform action for the corresponding key
-        }
+        performAction(event.key); // Perform action for the corresponding key
     }
 }
 

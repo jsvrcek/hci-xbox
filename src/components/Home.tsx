@@ -34,6 +34,7 @@ export default function XboxHome() {
         const interval = setInterval(() => {
             setTime(dayjs().format("h:mm A"));
         }, 60000);
+        dispatch(setSelected("home-profile"))
         return () => clearInterval(interval);
     }, []);
 
@@ -78,7 +79,7 @@ export default function XboxHome() {
             {/* Top Navigation */}
             <div className="w-full flex flex-row justify-between pl-6 m-2 pr-6">
                 <div className="flex items-center text-white"
-                     onClick={() => dispatch(setSelected(1))}>
+                     onClick={() => dispatch(setSelected("home-profile"))}>
                     <img src="/profile.png" alt="User" className={`w-12 h-12 rounded-full mr-2 ${
                         selected === "home-profile" ? "border-4 border-blue-500 " : ""
                     }`}/>

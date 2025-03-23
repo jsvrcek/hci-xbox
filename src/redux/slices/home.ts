@@ -7,7 +7,7 @@ import type {Feature, Game} from "../../types.ts";
 import games_list from "../../xbox_games.json"
 import inc from "../../utils/increment.ts";
 
-const random = getUniqueRandomIntegers(0, games_list.length, 9)
+const random = getUniqueRandomIntegers(0, games_list?.length || 1, 9)
 let defaultGames: Game[] = (() => {
     const counts = {startIndex: 10, idx: 0, rowCount: 0, rowLimit: 9};
     return random.map((r) => {
@@ -41,20 +41,18 @@ const homeSlice = createSlice({
     reducers: {
         setGames: (state, action) => {
             const counts = {startIndex: 10, idx: 0, rowCount: 0, rowLimit: 9};
-    const inc = inc(counts);
             const pinned = action.payload?.filter(g => g.pin);
             const unpinned = action.payload?.filter(g => !g.pin);
             state.games = [...pinned, ...unpinned].slice(0, 9).map((g) => ({
                 ...g,
-                index: inc(),
+                index: inc(counts),
                 name: g.title,
                 id: `game-${g.title}`
             }));
         },
         setFeatures: (state, action) => {
             const counts = {startIndex: 20, idx: 0, rowCount: 0, rowLimit: 4};
-            const inc = inc(counts);
-            state.featured = action.payload?.slice(0, 4).map((g, i) => ({...g, index: inc()}));
+            state.featured = action.payload?.slice(0, 4).map((g, i) => ({...g, index: inc(counts)}));
         }
     },
 });

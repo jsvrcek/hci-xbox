@@ -22,6 +22,9 @@ const SearchPage = () => {
     const {selected} = useSelector((state: RootState) => state.selection);
     const navigate = useNavigate();
 
+    useEffect(() => {
+        dispatch(setSelected("search-search"));
+    }, []);
 
     const menuItems: Feature[] = [
         {
