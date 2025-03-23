@@ -9,9 +9,7 @@ import {setSearchResults, setSearchText} from "../redux/slices/search.ts";
 import {lookupGames} from "../utils/lookupGames.ts";
 import {useNavigate} from "react-router";
 import {MicButton} from "./MicButton.tsx";
-import {LoadingSpinner} from "./LoadingSpinner.tsx";
 import {useGlobalKeyPress} from "../hooks/keys.ts";
-import {isNumber} from "lodash-es";
 
 
 const SearchPage = () => {
@@ -24,6 +22,7 @@ const SearchPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        dispatch(setEntered(false));
         dispatch(setSelected("search-search"));
     }, []);
 
@@ -111,6 +110,7 @@ const SearchPage = () => {
         } finally {
             setSearchText("");
             setIsLoading(false);
+            dispatch(setEntered(false));
         }
     };
 
