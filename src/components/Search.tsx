@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import SearchRow from "./SearchRow.tsx";
 import type {Feature} from "../types.ts";
 import {ArrowLeftCircleFill, Mic, MicFill} from "react-bootstrap-icons";
@@ -10,13 +10,15 @@ import {lookupGames} from "../utils/lookupGames.ts";
 import {useNavigate} from "react-router";
 import {MicButton} from "./MicButton.tsx";
 import {LoadingSpinner} from "./LoadingSpinner.tsx";
-
+import {useGlobalKeyPress} from "../hooks/keys.ts";
 
 
 const SearchPage = () => {
     const dispatch = useDispatch();
     const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const {games} = useSelector((state: RootState) => state.search);
+
     const {selected} = useSelector((state: RootState) => state.selection);
     const navigate = useNavigate();
 
@@ -76,13 +78,13 @@ const SearchPage = () => {
                 body: JSON.stringify({search: text}),
             });
             const gameResults = await response.json();
-            if(gameResults?.games) {
+            if (gameResults?.games) {
                 const foundGames = lookupGames(gameResults.games);
                 if (foundGames?.length) {
                     dispatch(setSearchResults(foundGames));
                 }
             }
-        }finally {
+        } finally {
             setIsLoading(false);
         }
     };
@@ -93,19 +95,45 @@ const SearchPage = () => {
         }
     };
 
+
+    const navigables = [{index: 1, id: 'search-back'}, {index:2, id: 'search-search'}, {index:3, id: 'search-mic'}, ...menuItems, ...games]
+    const setSelectedByIndex = (idx) => dispatch(setSelected(navigables.find(n => n.index === idx)?.id));
+
+    const getSelectedIndex = () => navigables.find(n =>n.id === selected)?.index
+    useGlobalKeyPress(getSelectedIndex, setSelectedByIndex);
+
+
+    useEffect(() => {
+        if ([7, 8, 9, 10].includes(selected)) {
+            dispatch(setSelectedByIndex(3))
+        }
+        if ([18, 19,20].includes(selected)) {
+            dispatch(setSelectedByIndex(17))
+        }
+        if ([28,29,30].includes(selected)) {
+            dispatch(setSelectedByIndex(27))
+        }
+        if ([38,39,40].includes(selected)) {
+            dispatch(setSelectedByIndex(27))
+        }
+        if (selected>40){
+            dispatch(setSelectedByIndex(30))
+        }
+    }, [setSelectedByIndex]);
+
     return (
         <div className="min-h-screen bg-gradient-to-r from-black to-teal-900 text-white p-6 ">
             <div className="flex flex-row align-center items-center justify-center space-x-4">
-                <ArrowLeftCircleFill className="h-8 w-8 text-gray-300" onClick={() => navigate('/')}/>
+                <ArrowLeftCircleFill className={`${selected === 'search-back' && "border-4 border-blue-500"} h-8 w-8 text-gray-300`} onClick={() => navigate('/')}/>
                 <input
-                    className="bg-gray-700 rounded-3xl text-left py-2 px-6 text-xl w-150 focus:outline-none focus:border-4 focus:border-blue-500"
+                    className={`${selected === 'search-search' && "border-4 border-blue-500"} bg-gray-700 rounded-3xl text-left py-2 px-6 text-xl w-150 focus:outline-none focus:border-4 focus:border-blue-500`}
                     type="text"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Search"
                     onKeyUp={handleKeyUp}
                 />
-                <MicButton isLoading={isLoading} setIsLoading={setIsLoading} />
+                <MicButton isLoading={isLoading} setIsLoading={setIsLoading} selected={selected==='search-mic'}/>
             </div>
             <nav className="flex justify-center space-x-6 mt-6">
                 {menuItems.map((menuItem) => (

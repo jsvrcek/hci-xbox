@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import home from './slices/home.ts';
 import selection from './slices/selection.ts';
 import search from "./slices/search.ts";
+import {setupListeners} from "@reduxjs/toolkit/query";
 
 
 const saveState = (state: any) => {
@@ -40,7 +41,7 @@ export default store;
 store.subscribe(() => {
   saveState(store.getState());
 });
-
 // Export types for the store's state and dispatch
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+setupListeners(store.dispatch)

@@ -8,17 +8,16 @@ import type {RootState} from "../redux/store.ts";
 import {useDispatch, useSelector} from "react-redux";
 import FeaturedRow from "./FeaturedRow.tsx";
 import GameRow from "./GameRow.tsx";
-import {setSelected} from "../redux/slices/selection.ts";
+import {setEntered, setSelected} from "../redux/slices/selection.ts";
 import {setGames} from "../redux/slices/home.ts";
 import {useNavigate} from "react-router";
+import {useGlobalKeyPress} from "../hooks/keys.ts";
 
-
-let gamepad = null;
 
 export default function XboxHome() {
     const dispatch = useDispatch();
-    const {games} = useSelector((state: RootState) => state.home);
-    const {selected} = useSelector((state: RootState) => state.selection);
+    const {games, featured} = useSelector((state: RootState) => state.home);
+    const {selected, entered} = useSelector((state: RootState) => state.selection);
     const [time, setTime] = useState(dayjs().format("h:mm A"));
     const [isMenuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -31,7 +30,6 @@ export default function XboxHome() {
         {id: "menu-gear", index: 6, icon: <Gear/>, onClick: () => dispatch(setSelected("menu-gear"))}
     ].map(m => ({...m, key: m.id}))
 
-
     useEffect(() => {
         const interval = setInterval(() => {
             setTime(dayjs().format("h:mm A"));
@@ -40,66 +38,14 @@ export default function XboxHome() {
     }, []);
 
     useEffect(() => {
-        if ([7, 8, 9, 10].includes(selected)) {
-            dispatch(setSelected(6))
-        }
-        if ([25, 26, 27, 28, 29].includes(selected)) {
-            dispatch(setSelected(24))
-        }
-    }, [selected]);
-
-
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            if (isMenuOpen) {
-                handleModalMenu(event);
-            } else {
-                handleHomeMenu(event);
+        if(entered){
+            if(selected=="home-search"){
+                navigate("/search")
             }
-
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selected]);
-
-    const handleModalMenu = (event) => {
-        switch (event.key) {
-            case "ArrowDown" || gamepad?.buttons[11]?.pressed:
-                dispatch(setSelected(selected + 10 < 30 ? selected + 10 : selected));
-                break;
-            case "ArrowUp" || gamepad?.buttons[10]?.pressed:
-                dispatch(setSelected(selected - 10 > 0 ? selected - 10 : selected));
-                break;
-            case "Enter" || gamepad?.buttons[7]?.pressed:
-                setMenuOpen(true);
-                break;
-            default:
-                return;
         }
-    };
+        dispatch(setEntered(null));
+    }, [entered]);
 
-    const handleHomeMenu = (event) => {
-        switch (event.key) {
-            case "ArrowRight" || gamepad?.buttons[13]?.pressed:
-                dispatch(setSelected(selected + 1 < 25 ? selected + 1 : selected));
-                break;
-            case "ArrowLeft" || gamepad?.buttons[12]?.pressed:
-                dispatch(setSelected(selected - 1 > 0 ? selected - 1 : selected));
-                break;
-            case "ArrowDown" || gamepad?.buttons[11]?.pressed:
-                dispatch(setSelected(selected + 10 < 30 ? selected + 10 : selected));
-                break;
-            case "ArrowUp" || gamepad?.buttons[10]?.pressed:
-                dispatch(setSelected(selected - 10 > 0 ? selected - 10 : selected));
-                break;
-            case "Enter" || gamepad?.buttons[7]?.pressed:
-                setMenuOpen(true);
-                break;
-            default:
-                return;
-        }
-    };
 
     function pinGame() {
         const game = getSelectedGame();
@@ -109,35 +55,21 @@ export default function XboxHome() {
         setMenuOpen(false);
     }
 
-
-    function gamepadHandler() {
-        gamepad = navigator.getGamepads().find(g => g?.buttons?.length > 1);
-        if (gamepad) {
-            // Joystick movements
-            const leftStickX = gamepad.axes[0]; // Left stick X axis
-            const leftStickY = gamepad.axes[1]; // Left stick Y axis
-            const rightStickX = gamepad.axes[2]; // Right stick X axis
-            const rightStickY = gamepad.axes[3]; // Right stick Y axis
-
-            // Buttons (example for button A)
-            const buttonA = gamepad.buttons[0].pressed; // Button A is at index 0
-            const buttonB = gamepad.buttons[1].pressed; // Button B is at index 0
-            const buttonUp = gamepad.buttons[10].pressed;
-            const buttonDown = gamepad.buttons[11].pressed;
-            const buttonLeft = gamepad.buttons[12].pressed;
-            const buttonRight = gamepad.buttons[13].pressed;
-
-            requestAnimationFrame(gamepadHandler); // Keep polling
-        }
-    }
-
-    if ("getGamepads" in navigator) {
-        gamepadHandler(); // Start polling
-    } else {
-        console.log("Gamepad API not supported.");
-    }
-
     const getSelectedGame = () => games.find(g => g.id === selected);
+
+    const navigables = [{index: 1, id: "home-profile"}, ...menuItems, ...games, ...featured]
+    const setSelectedByIndex = (idx) => dispatch(setSelected(navigables.find(n =>n.index === idx)?.id));
+    const getSelectedIndex = () => navigables.find(n =>n.id === selected)?.index
+    useGlobalKeyPress(getSelectedIndex, setSelectedByIndex);
+
+    useEffect(() => {
+        if ([7, 8, 9, 10].includes(selected)) {
+            dispatch(setSelectedByIndex(6))
+        }
+        if ([25, 26, 27, 28, 29].includes(selected)) {
+            dispatch(setSelectedByIndex(24))
+        }
+    }, [setSelectedByIndex]);
 
     return (
         <div className="w-full h-screen">
@@ -148,7 +80,7 @@ export default function XboxHome() {
                 <div className="flex items-center text-white"
                      onClick={() => dispatch(setSelected(1))}>
                     <img src="/profile.png" alt="User" className={`w-12 h-12 rounded-full mr-2 ${
-                        selected === 1 ? "border-4 border-blue-500 " : ""
+                        selected === "home-profile" ? "border-4 border-blue-500 " : ""
                     }`}/>
                     <div className="text-left">
                         <p className="font-semibold">Joseph Svrcek</p>
@@ -160,6 +92,7 @@ export default function XboxHome() {
                 <div className="flex items-center text-white">
                     {menuItems.map((menuItem) => (
                         <motion.div
+                            animate={{ scale: entered == menuItem.index ? 0.95 : 1 }}
                             key={menuItem.id}
                             className={`d-flex mt-4 m-2 justify-content-center align-items-center rounded-full cursor-pointer ${
                                 selected === menuItem.id ? "border-4 border-blue-500 " : ""

@@ -7,7 +7,7 @@ import {type RootState} from "../redux/store.ts";
 
 export default function GameRow() {
     const dispatch = useDispatch();
-    const selectedId = useSelector((state: RootState) => state.selection.selected);
+    const {selected, entered} = useSelector((state: RootState) => state.selection);
     const {games} = useSelector((state: RootState) => state.home);
 
 
@@ -16,12 +16,13 @@ export default function GameRow() {
         {games.map((game) => (
             <motion.div
                 animate={{
-                    width: selectedId === game.id ? "calc(100% / 6)" : "calc(100% / 12)",
-                    height: selectedId === game.id ? "calc(100% / 6)" : "calc(100% / 12)"
+                    width: selected === game.id ? "calc(100% / 6)" : "calc(100% / 12)",
+                    height: selected === game.id ? "calc(100% / 6)" : "calc(100% / 12)",
+                    scale: entered == game.index ? 0.95 : 1
                 }}
                 key={game.id}
                 className={`relative rounded-lg justify-around overflow-hidden cursor-pointer items-end origin-bottom ${
-                    selectedId === game.id ? "border-4 border-blue-500 " : ""
+                    selected === game.id ? "border-4 border-blue-500 " : ""
                 }`}
                 onClick={() => dispatch(setSelected(game.id))}
                 whileTap={{scale: 0.95}}
@@ -35,7 +36,7 @@ export default function GameRow() {
                 </div>
                 <div key={`${game.name}-name`}
                      className={`absolute bottom-2 left-2 text-white bg-black bg-opacity-50 px-2 py-1 rounded text-center ${
-                         selectedId === game.id || "hidden"
+                         selected === game.id || "hidden"
                      }`}>
                     {game.name}
                 </div>

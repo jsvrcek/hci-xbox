@@ -9,14 +9,15 @@ import React from "react";
 export default function SearchRow() {
     const {games} = useSelector((state: RootState) => state.search);
     const dispatch = useDispatch();
-    const selectedId = useSelector((state: RootState) => state.selection.selected);
+    const {selected, entered} = useSelector((state: RootState) => state.selection);
 
 
     return <div className="mt-6 grid grid-cols-6 gap-4 justify-center">
         {games.map((game) => (
-            <motion.div onClick={() => dispatch(setSelected(game.id))}
+            <motion.div key={game.id} onClick={() => dispatch(setSelected(game.id))}
                         whileTap={{scale: 0.95}}
-                        className={`rounded-lg ${selectedId === game.id ? "border-4 border-blue-500 " : ""}`}
+                        animate={{ scale: entered == game.index ? 0.95 : 1 }}
+                        className={`rounded-lg ${selected === game.id ? "border-4 border-blue-500 " : ""}`}
             >
                 <div key={game.id} className="bg-gray-900 h-full rounded-lg overflow-hidden p-3">
                     <img key={game.name} src={game.image_path} alt={game.name}

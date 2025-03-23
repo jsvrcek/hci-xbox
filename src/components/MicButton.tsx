@@ -7,9 +7,10 @@ import {transcribeAudio} from "../utils/transcribeAudio.ts";
 interface ChildProps {
     isLoading: boolean;
     setIsLoading: (boolean) => void;
+    selected: boolean;
 }
 
-export const MicButton: React.FC<ChildProps> = ({isLoading, setIsLoading}) => {
+export const MicButton: React.FC<ChildProps> = ({isLoading, setIsLoading, selected}) => {
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
@@ -89,7 +90,7 @@ export const MicButton: React.FC<ChildProps> = ({isLoading, setIsLoading}) => {
                 className="rounded-full flex items-center justify-center"
             >
                 {isLoading ? <div className="h-6 w-6"><LoadingSpinner/></div> :
-                    <MicFill className={`h-6 w-6 ${isRecording ? "text-red-400" : "text-gray-300"}`}/>}
+                    <MicFill className={`h-6 w-6 ${isRecording ? "text-red-400" : "text-gray-300"} ${selected === 'back' && "border-4 border-blue-500"}`}/>}
             </button>
         </div>
     );
