@@ -1,10 +1,9 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {MicFill} from "react-bootstrap-icons";
 import {LoadingSpinner} from "./LoadingSpinner.tsx";
-import {transcribeAudio} from "../utils/transcribeAudio.ts";
 import {setSearchText} from "../redux/slices/search.ts";
 import {useDispatch, useSelector} from "react-redux";
-import {setEntered, setSelected} from "../redux/slices/selection.ts";
+import {setEntered} from "../redux/slices/selection.ts";
 import type {RootState} from "../redux/store.ts";
 
 

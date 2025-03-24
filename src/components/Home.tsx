@@ -42,6 +42,7 @@ export default function XboxHome() {
         if (entered) {
             if (selected === "menu-search") {
                 navigate("/search")
+                dispatch(setEntered(false))
             }
         }
     }, [entered]);
@@ -53,6 +54,7 @@ export default function XboxHome() {
                 setMenu(1);
             }
         } else {
+            setMenuOpen(false);
             setEntered(null);
         }
     }, [menu]);

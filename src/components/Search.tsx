@@ -27,10 +27,12 @@ const SearchPage = () => {
     }, []);
 
     useEffect(() => {
-        if (searchText) {
+        // Allow deleting
+        if (!searchText && textContent.length === 1){
+            setTextContent("")
+        } else if (searchText) {
             setTextContent(searchText);
             void handleSearch();
-            dispatch(setSearchText(""));
         }
         dispatch(setEntered(false));
     }, [searchText]);
@@ -137,7 +139,7 @@ const SearchPage = () => {
 
 
     useEffect(() => {
-        if ([7, 8, 9, 10].includes(selected)) {
+        if ([4,5,6,7, 8, 9, 10].includes(selected)) {
             setSelectedByIndex(3)
         }
         if ([18, 19, 20].includes(selected)) {

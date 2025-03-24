@@ -65,9 +65,7 @@ export function useGlobalKeyPress(getSelected, setSelected) {
 
     function actionForKeyA() {
         console.log("Action for Button A");
-        if(getSelected()) {
-            dispatch(setEntered(true));
-        }
+        dispatch(setEntered(true));
     }
 
     function actionForKeyB() {
@@ -131,6 +129,9 @@ export function useGlobalKeyPress(getSelected, setSelected) {
                 actionForKeyA();
                 break;
             case "KeyB":
+                actionForKeyB();
+                break;
+            case "Esc":
                 actionForKeyB();
                 break;
             case "KeyX":
